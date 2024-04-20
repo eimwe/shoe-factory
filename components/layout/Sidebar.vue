@@ -1,9 +1,27 @@
-<script lang="ts" setup></script>
+<script setup lang="ts"></script>
 
 <template>
-  <aside class="bg-sidebar relative h-full w-full px-5 py-8">
-    <NuxtLink to="/" title="На Главную" class="mb-10 block">
-      <NuxtImg src="/logo.svg" alt="AWP logo" width="100px" class="mx-auto" />
-    </NuxtLink>
+  <aside class="px-5 py-8">
+    <div class="flex items-start justify-end">
+      <UTooltip
+        text="Перейти на Главный экран"
+        :popper="{ arrow: true, placement: 'top' }"
+      >
+        <NuxtLink to="/">
+          <NuxtImg src="/logo.svg" alt="AWP logo" width="100px" />
+        </NuxtLink>
+      </UTooltip>
+      <UTooltip
+        text="Выйти из системы"
+        :popper="{ arrow: true, placement: 'right' }"
+      >
+        <UButton
+          icon="i-heroicons-arrow-left-end-on-rectangle"
+          size="xl"
+          color="primary"
+          variant="link"
+        />
+      </UTooltip>
+    </div>
   </aside>
 </template>
