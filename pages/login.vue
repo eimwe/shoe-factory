@@ -1,17 +1,48 @@
 <script setup lang="ts">
-import type { FormError, FormSubmitEvent } from "#ui/types";
+import type { FormError } from "#ui/types";
+import { useIsLoadingStore } from "~/store/loading.store";
+import { useAuthStore } from "~/store/auth.store";
 
 useHead({
   title: "Вход в АРМ",
 });
 
+const isLoadingStore = useIsLoadingStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
 const state = reactive({
-  email: undefined,
-  password: undefined,
+  email: "",
+  password: "",
 });
 
-const userPassword = ref("");
 const hiddenPassword = ref(true);
+
+const login = async () => {
+  isLoadingStore.set(true);
+
+  try {
+    await account.createEmailPasswordSession(state.email, state.password);
+
+    const response = await account.get();
+
+    if (response) {
+      authStore.set({
+        email: response.email,
+        status: response.status,
+      });
+    }
+
+    state.email = "";
+    state.password = "";
+
+    await router.push("/");
+  } catch (error) {
+    console.error(error);
+  }
+
+  isLoadingStore.set(false);
+};
 
 const validate = (state: any): FormError[] => {
   const errors = [];
@@ -19,11 +50,6 @@ const validate = (state: any): FormError[] => {
   if (!state.password) errors.push({ path: "password", message: "Required" });
   return errors;
 };
-
-async function onSubmit(event: FormSubmitEvent<any>) {
-  // Do something with data
-  console.log(event.data);
-}
 </script>
 
 <template>
@@ -33,20 +59,21 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       :validate="validate"
       :state="state"
       class="space-y-4"
-      @submit="onSubmit"
+      @submit="login"
     >
       <UInput
-        icon="i-heroicons-user"
+        v-model="state.email"
+        icon="i-heroicons-at-symbol"
         size="xl"
-        type="text"
+        type="email"
         color="primary"
         variant="outline"
-        placeholder="Логин"
+        placeholder="E-mail"
         required
       />
 
       <UInput
-        v-model="userPassword"
+        v-model="state.password"
         size="xl"
         :type="hiddenPassword ? 'password' : 'text'"
         color="primary"
@@ -56,12 +83,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         class="text-emerald-400"
       >
         <template #leading>
-          <UIcon
-            v-if="hiddenPassword"
-            name="i-heroicons-eye-slash"
-            class="h-6 w-6"
-          />
-          <UIcon v-else name="i-heroicons-eye" class="h-6 w-6" />
+          <UIcon v-if="hiddenPassword" name="i-heroicons-eye" class="h-6 w-6" />
+          <UIcon v-else name="i-heroicons-eye-slash" class="h-6 w-6" />
           <UCheckbox
             v-model="hiddenPassword"
             :ui="{
