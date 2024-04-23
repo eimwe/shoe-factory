@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 
 interface IAuthStore {
-  username: string;
+  email: string;
   status: boolean;
 }
 
 const defaultValue: { user: IAuthStore } = {
   user: {
-    username: "",
+    email: "",
     status: false,
   },
 };
