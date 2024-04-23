@@ -1,4 +1,21 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useIsLoadingStore } from "~/store/loading.store";
+import { useAuthStore } from "~/store/auth.store";
+
+const isLoadingStore = useIsLoadingStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
+const logout = async () => {
+  isLoadingStore.set(true);
+
+  await account.deleteSession("current");
+  authStore.clear();
+  await router.push("/login");
+
+  isLoadingStore.set(false);
+};
+</script>
 
 <template>
   <aside class="px-5 py-8">
@@ -20,6 +37,7 @@
           size="xl"
           color="primary"
           variant="link"
+          @click="logout"
         />
       </UTooltip>
     </div>
