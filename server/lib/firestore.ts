@@ -1,24 +1,80 @@
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   deleteDoc,
   doc,
   setDoc,
+  QuerySnapshot,
+  DocumentData,
+  DocumentReference,
 } from "firebase/firestore";
 
 import { FIRESTORE_DB } from "./firebase";
 
-export const queryByCollection = async (col: string) => {
+export const queryByCollection = async (
+  col: string,
+): Promise<(DocumentData & { id: string })[]> => {
   const colRef = collection(FIRESTORE_DB, col);
-  const querySnapshot = await getDocs(colRef);
+  const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(colRef);
 
-  const docs = Array.from(querySnapshot.docs).map((doc) => {
-    return {
-      ...doc.data(),
-      id: doc.id,
-    };
-  });
+  const docs: (DocumentData & { id: string })[] = [];
+
+  await Promise.all(
+    querySnapshot.docs.map(async (doc) => {
+      const docData = doc.data();
+
+      // Check if any fields in the document are nested documents
+      const nestedFields: string[] = Object.keys(docData).filter(
+        (key) => typeof docData[key] === "object",
+      );
+
+      // If there are nested documents, retrieve the referenced documents
+      if (nestedFields.length > 0) {
+        // Clone the document data to avoid modifying the original document
+        const updatedDocData = { ...docData };
+
+        // Loop through each nested field and retrieve the referenced documents
+        await Promise.all(
+          nestedFields.map(async (field) => {
+            if (Array.isArray(updatedDocData[field])) {
+              // If the field is an array of nested documents, loop through each nested document and fetch its data
+              updatedDocData[field] = await Promise.all(
+                updatedDocData[field].map(async (nestedDocRef: any) => {
+                  if (nestedDocRef instanceof DocumentReference) {
+                    // If the nested reference is a DocumentReference, fetch its data
+                    const nestedDocSnapshot = await getDoc(nestedDocRef);
+                    return nestedDocSnapshot.exists()
+                      ? {
+                          ...nestedDocSnapshot.data(),
+                          id: nestedDocSnapshot.id,
+                        }
+                      : null;
+                  }
+                }),
+              );
+            } else {
+              // If the field is a single nested document, retrieve its data
+              const nestedDocRef: any = updatedDocData[field];
+              if (nestedDocRef instanceof DocumentReference) {
+                const nestedDocSnapshot = await getDoc(nestedDocRef);
+                updatedDocData[field] = nestedDocSnapshot.exists()
+                  ? { ...nestedDocSnapshot.data(), id: nestedDocSnapshot.id }
+                  : null;
+              }
+            }
+          }),
+        );
+
+        // Push the updated document data to the array
+        docs.push({ ...updatedDocData, id: doc.id });
+      } else {
+        // If there are no nested documents, simply add the document data to the array
+        docs.push({ ...docData, id: doc.id });
+      }
+    }),
+  );
 
   return docs;
 };
