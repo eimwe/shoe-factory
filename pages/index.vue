@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Ref } from "vue";
 import type { ITask } from "@/types/index";
+import { formatTimestamp } from "~/utils/formatTimestamp";
 
 useHead({
   title: "Главный экран",
@@ -87,15 +88,6 @@ onMounted(async () => {
 
   isLoading.value = false;
 });
-
-const formatTimestamp = (seconds: number): string => {
-  if (!seconds) return "";
-  const date = new Date(seconds * 1000);
-  const day = ("0" + date.getDate()).slice(-2);
-  const month = ("0" + (date.getMonth() + 1)).slice(-2);
-  const year = date.getFullYear().toString().slice(-2);
-  return `${day}.${month}.${year}`;
-};
 
 const handleSlideOver = (rowId: string) => {
   taskId.value = rowId;
