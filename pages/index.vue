@@ -1,46 +1,10 @@
 <script setup lang="ts">
 import type { Ref } from "vue";
-import type { Timestamp } from "firebase/firestore";
+import type { ITask } from "@/types/index";
 
 useHead({
   title: "Главный экран",
 });
-
-interface CollectionProperties {
-  id: string;
-  title: string;
-}
-
-interface Materials extends CollectionProperties {}
-
-interface Products extends CollectionProperties {}
-
-interface Statuses extends CollectionProperties {}
-
-interface Equipment extends CollectionProperties {
-  type: string;
-}
-
-interface Staff {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-interface Task {
-  id: string;
-  product: Products;
-  status: Statuses;
-  equipment: Equipment[];
-  materials: Materials[];
-  staff: Staff[];
-  amount: number;
-  start_date: Timestamp;
-  end_date: Timestamp;
-  startDateFormatted: string;
-  endDateFormatted: string;
-}
 
 const columns = [
   {
@@ -80,12 +44,12 @@ const columns = [
   },
 ];
 
-const items = (row: Task) => [
+const items = (row: ITask) => [
   [
     {
       label: "Редактировать",
       icon: "i-heroicons-pencil-square",
-      click: () => handleSlideOver(row.id as Task["id"]),
+      click: () => handleSlideOver(row.id as ITask["id"]),
     },
     {
       label: "Удалить",
@@ -94,7 +58,7 @@ const items = (row: Task) => [
   ],
 ];
 
-const tasks: Ref<Task[]> = ref([]);
+const tasks: Ref<ITask[]> = ref([]);
 const isLoading = ref(false);
 const isOpen = ref(false);
 const taskId = ref("");
