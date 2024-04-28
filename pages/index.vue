@@ -95,9 +95,11 @@ onMounted(async () => {
     status: task.status,
     equipment: task.equipment
       .map((equipment: any) => equipment.title)
-      .join(", "),
-    materials: task.materials.map((material: any) => material.title).join(", "),
-    staff: task.staff.map((employee: any) => employee.name).join(", "),
+      .join("\r\n"),
+    materials: task.materials
+      .map((material: any) => material.title)
+      .join("\r\n"),
+    staff: task.staff.map((employee: any) => employee.name).join("\r\n"),
   }));
 
   isLoading.value = false;
@@ -128,8 +130,12 @@ const formatTimestamp = (seconds: number): string => {
       label: 'Таблица пуста',
     }"
     :progress="{ color: 'primary', animation: 'carousel' }"
-    class="w-full"
     :columns="columns"
     :rows="tasks"
+    :ui="{
+      td: {
+        base: 'whitespace-break-spaces',
+      },
+    }"
   />
 </template>
