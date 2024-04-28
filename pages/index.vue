@@ -49,15 +49,15 @@ const columns = [
   },
   {
     key: "endDateFormatted",
-    label: "Дата завершения",
+    label: "Дата выпуска",
   },
   {
     key: "amount",
-    label: "Количество",
+    label: "Партия",
   },
   {
     key: "product.title",
-    label: "Название изделия",
+    label: "Изделие",
   },
   {
     key: "status.title",
@@ -65,7 +65,7 @@ const columns = [
   },
   {
     key: "equipment",
-    label: "Оборудование",
+    label: "Инвентарь",
   },
   {
     key: "materials",
@@ -73,7 +73,7 @@ const columns = [
   },
   {
     key: "staff",
-    label: "Сотрудники",
+    label: "Персонал",
   },
 ];
 
@@ -114,29 +114,22 @@ const formatTimestamp = (seconds: number): string => {
 </script>
 
 <template>
-  <div>
-    <h1 class="mb-4 mt-4 text-center text-xl font-bold capitalize">
-      <abbr
-        title="Автоматизированное рабочее место"
-        class="uppercase no-underline"
-        >Арм</abbr
-      >
-      технолога
-    </h1>
-    <UTable
-      :loading="isLoading"
-      :loading-state="{
-        icon: 'i-heroicons-arrow-path-20-solid',
-        label: 'Данные загружаются...',
-      }"
-      :empty-state="{
-        icon: 'i-heroicons-table-cells',
-        label: 'Таблица пуста',
-      }"
-      :progress="{ color: 'primary', animation: 'carousel' }"
-      class="w-full"
-      :columns="columns"
-      :rows="tasks"
-    />
-  </div>
+  <h1 class="mb-10 mt-8 text-3xl font-bold">
+    Серийное производство на фабрике
+  </h1>
+  <UTable
+    :loading="isLoading"
+    :loading-state="{
+      icon: 'i-heroicons-arrow-path-20-solid',
+      label: 'Данные загружаются...',
+    }"
+    :empty-state="{
+      icon: 'i-heroicons-table-cells',
+      label: 'Таблица пуста',
+    }"
+    :progress="{ color: 'primary', animation: 'carousel' }"
+    class="w-full"
+    :columns="columns"
+    :rows="tasks"
+  />
 </template>
