@@ -38,15 +38,17 @@ interface Task {
   amount: number;
   start_date: Timestamp;
   end_date: Timestamp;
+  startDateFormatted: string;
+  endDateFormatted: string;
 }
 
 const columns = [
   {
-    key: "start_date.seconds",
+    key: "startDateFormatted",
     label: "Дата начала",
   },
   {
-    key: "end_date.seconds",
+    key: "endDateFormatted",
     label: "Дата завершения",
   },
   {
@@ -86,6 +88,8 @@ onMounted(async () => {
     id: task.id,
     start_date: task.start_date,
     end_date: task.end_date,
+    startDateFormatted: formatTimestamp(task.start_date.seconds),
+    endDateFormatted: formatTimestamp(task.end_date.seconds),
     amount: task.amount,
     product: task.product,
     status: task.status,
@@ -98,6 +102,15 @@ onMounted(async () => {
 
   isLoading.value = false;
 });
+
+const formatTimestamp = (seconds: number): string => {
+  if (!seconds) return "";
+  const date = new Date(seconds * 1000);
+  const day = ("0" + date.getDate()).slice(-2);
+  const month = ("0" + (date.getMonth() + 1)).slice(-2);
+  const year = date.getFullYear().toString().slice(-2);
+  return `${day}.${month}.${year}`;
+};
 </script>
 
 <template>
