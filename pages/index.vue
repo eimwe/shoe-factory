@@ -128,5 +128,7 @@ const handleSlideOver = (rowId: string) => {
       </UDropdown>
     </template>
   </UTable>
-  <USlideover v-model="isOpen"> </USlideover>
+  <USlideover v-model="isOpen">
+    <PageEditTaskForm :id="taskId" />
+  </USlideover>
 </template>
