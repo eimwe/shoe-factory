@@ -75,10 +75,29 @@ const columns = [
     key: "staff",
     label: "Персонал",
   },
+  {
+    key: "menu",
+  },
+];
+
+const items = (row: Task) => [
+  [
+    {
+      label: "Редактировать",
+      icon: "i-heroicons-pencil-square",
+      click: () => handleSlideOver(row.id as Task["id"]),
+    },
+    {
+      label: "Удалить",
+      icon: "i-heroicons-trash",
+    },
+  ],
 ];
 
 const tasks: Ref<Task[]> = ref([]);
 const isLoading = ref(false);
+const isOpen = ref(false);
+const taskId = ref("");
 
 onMounted(async () => {
   isLoading.value = true;
@@ -113,6 +132,11 @@ const formatTimestamp = (seconds: number): string => {
   const year = date.getFullYear().toString().slice(-2);
   return `${day}.${month}.${year}`;
 };
+
+const handleSlideOver = (rowId: string) => {
+  taskId.value = rowId;
+  isOpen.value = !isOpen.value ? true : false;
+};
 </script>
 
 <template>
@@ -137,5 +161,16 @@ const formatTimestamp = (seconds: number): string => {
         base: 'whitespace-break-spaces',
       },
     }"
-  />
+  >
+    <template #menu-data="{ row }">
+      <UDropdown :items="items(row)">
+        <UButton
+          color="primary"
+          variant="ghost"
+          icon="i-heroicons-ellipsis-vertical"
+        />
+      </UDropdown>
+    </template>
+  </UTable>
+  <USlideover v-model="isOpen"> </USlideover>
 </template>
