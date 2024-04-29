@@ -8,6 +8,9 @@ import type {
 } from "@/types/index";
 import { formatTimestamp } from "~/utils/formatTimestamp";
 import { Timestamp } from "firebase/firestore";
+import { set } from "@/server/lib/firestore";
+import { doc, updateDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "@/server/lib/firebase";
 
 const props = defineProps<{
   id?: string;
@@ -30,7 +33,8 @@ const state: ITask = reactive({
 });
 const selectedStaff = ref<IStaff[]>([]);
 const staffOptions: Ref<IStaff[]> = ref([]);
-const selectedStatus = ref<IStatuses["title"]>("");
+//const selectedStatus = ref<IStatuses["title"]>("");
+const selectedStatus = ref<IStatuses | null>(null);
 const statusOptions: Ref<IStatuses[]> = ref([]);
 const selectedTools = ref<IEquipment[]>([]);
 const toolOptions: Ref<IEquipment[]> = ref([]);
@@ -105,7 +109,17 @@ onMounted(async () => {
       endDateFormatted: formatTimestamp(currentTask.end_date.seconds),
     };
 
-    selectedStatus.value = task.value.status.title;
+    //selectedStatus.value = task.value.status.title;
+
+    // Find the status object with the matching title
+    const defaultStatus = statusOptions.value.find(
+      (status) => status.title === task.value?.status.title,
+    );
+
+    // Assign the found status object to selectedStatus
+    if (defaultStatus) {
+      selectedStatus.value = defaultStatus;
+    }
   }
 
   watch(
@@ -186,6 +200,43 @@ watch(
   },
   { immediate: true },
 );
+
+const editDoc = async () => {
+  isLoading.value = true;
+
+  const editedDoc = {
+    product: doc(FIRESTORE_DB, `/products/${state.product.id}`),
+    status: doc(FIRESTORE_DB, `/statuses/${selectedStatus.value?.id}`),
+    equipment: selectedTools.value.map((tool) =>
+      doc(FIRESTORE_DB, `/equipment/${tool.id}`),
+    ),
+    materials: selectedMaterials.value.map((material) =>
+      doc(FIRESTORE_DB, `/materials/${material.id}`),
+    ),
+    staff: selectedStaff.value.map((staff) =>
+      doc(FIRESTORE_DB, `/staff/${staff.id}`),
+    ),
+    amount: state.amount,
+    start_date: new Timestamp(
+      state.start_date.seconds,
+      state.start_date.nanoseconds,
+    ),
+    end_date: new Timestamp(state.end_date.seconds, state.end_date.nanoseconds),
+  };
+
+  try {
+    //await $fetch(`/api/set?col=tasks&id=${editedDoc}`);
+    //await set("tasks", editedDoc);
+
+    await updateDoc(doc(FIRESTORE_DB, "/tasks/", `${props.id}`), editedDoc);
+
+    //await router.push("/");
+  } catch (error) {
+    console.error(error);
+  }
+
+  isLoading.value = true;
+};
 </script>
 
 <template>
@@ -194,11 +245,7 @@ watch(
     <h2 class="mb-10 mt-8 text-center text-3xl font-bold">
       Редактирование задания
     </h2>
-    <UForm
-      :state="state"
-      class="space-y-4 px-4"
-      @submit="console.log('submitted')"
-    >
+    <UForm :state="state" class="space-y-4 px-4" @submit="editDoc">
       <div class="flex gap-2">
         <UFormGroup label="Дата начала">
           <UInput
@@ -261,6 +308,7 @@ watch(
           color="primary"
           variant="outline"
           option-attribute="title"
+          placeholder="Выберите стадию производства"
           required
         />
       </UFormGroup>
