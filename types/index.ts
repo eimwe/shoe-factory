@@ -36,8 +36,4 @@ interface ITask {
   endDateFormatted: string;
 }
 
-interface IApiGetDocResponse {
-  result: ITask;
-}
-
-export type { ITask, IApiGetDocResponse };
+export type { ITask, IStaff };
