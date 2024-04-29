@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { ITask, IStaff, IStatuses } from "@/types/index";
+import type {
+  ITask,
+  IStaff,
+  IStatuses,
+  IEquipment,
+  IMaterials,
+} from "@/types/index";
 import { formatTimestamp } from "~/utils/formatTimestamp";
 import { Timestamp } from "firebase/firestore";
 
@@ -26,6 +32,10 @@ const selectedStaff = ref<IStaff[]>([]);
 const staffOptions: Ref<IStaff[]> = ref([]);
 const selectedStatus = ref<IStatuses["title"]>("");
 const statusOptions: Ref<IStatuses[]> = ref([]);
+const selectedTools = ref<IEquipment[]>([]);
+const toolOptions: Ref<IEquipment[]> = ref([]);
+const selectedMaterials = ref<IMaterials[]>([]);
+const materialOptions: Ref<IMaterials[]> = ref([]);
 
 onMounted(async () => {
   isLoading.value = true;
@@ -50,6 +60,30 @@ onMounted(async () => {
   }));
 
   statusOptions.value = statusList;
+
+  //@ts-ignore
+  const { result: tools } = (await $fetch(
+    "/api/query?col=equipment",
+  )) as IEquipment[];
+
+  const toolList: IEquipment[] = tools.map((tool: IEquipment) => ({
+    id: tool.id,
+    title: tool.title,
+  }));
+
+  toolOptions.value = toolList;
+
+  //@ts-ignore
+  const { result: materials } = (await $fetch(
+    "/api/query?col=materials",
+  )) as IMaterials[];
+
+  const materialList: IMaterials[] = materials.map((material: IMaterials) => ({
+    id: material.id,
+    title: material.title,
+  }));
+
+  materialOptions.value = materialList;
 
   //@ts-ignore
   const { result: currentTask } = (await $fetch(
@@ -111,6 +145,44 @@ watch(
   selectedStaffNames,
   (newStaffNames) => {
     selectedStaff.value = newStaffNames;
+  },
+  { immediate: true },
+);
+
+const selectedToolTitles = computed(() => {
+  if (!state.equipment || !toolOptions.value || !task.value) return [];
+
+  const taskToolTitles = task.value.equipment.map((tool) => tool.title);
+
+  return toolOptions.value.filter((tool) =>
+    taskToolTitles.includes(tool.title),
+  );
+});
+
+watch(
+  selectedToolTitles,
+  (newToolTitles) => {
+    selectedTools.value = newToolTitles;
+  },
+  { immediate: true },
+);
+
+const selectedMaterialTitles = computed(() => {
+  if (!state.materials || !materialOptions.value || !task.value) return [];
+
+  const taskMaterailTitles = task.value.materials.map(
+    (material) => material.title,
+  );
+
+  return materialOptions.value.filter((material) =>
+    taskMaterailTitles.includes(material.title),
+  );
+});
+
+watch(
+  selectedMaterialTitles,
+  (newMaterialTitles) => {
+    selectedMaterials.value = newMaterialTitles;
   },
   { immediate: true },
 );
@@ -191,6 +263,62 @@ watch(
           option-attribute="title"
           required
         />
+      </UFormGroup>
+
+      <UFormGroup label="Инвентарь">
+        <USelectMenu
+          v-model="selectedTools"
+          :options="toolOptions"
+          multiple
+          size="xl"
+          color="primary"
+          variant="outline"
+          option-attribute="title"
+          required
+        >
+          <template #label>
+            <template v-if="selectedTools.length">
+              <span
+                >{{ selectedTools.length }} выбран{{
+                  selectedTools.length > 1 ? "о" : ""
+                }}</span
+              >
+            </template>
+            <template v-else>
+              <span class="truncate text-gray-600 dark:text-gray-500"
+                >Выберите оборудование</span
+              >
+            </template>
+          </template>
+        </USelectMenu>
+      </UFormGroup>
+
+      <UFormGroup label="Сырье">
+        <USelectMenu
+          v-model="selectedMaterials"
+          :options="materialOptions"
+          multiple
+          size="xl"
+          color="primary"
+          variant="outline"
+          option-attribute="title"
+          required
+        >
+          <template #label>
+            <template v-if="selectedMaterials.length">
+              <span
+                >{{ selectedMaterials.length }} выбран{{
+                  selectedMaterials.length > 1 ? "о" : ""
+                }}</span
+              >
+            </template>
+            <template v-else>
+              <span class="truncate text-gray-600 dark:text-gray-500"
+                >Выберите наименования сырья</span
+              >
+            </template>
+          </template>
+        </USelectMenu>
       </UFormGroup>
 
       <UFormGroup label="Персонал">
