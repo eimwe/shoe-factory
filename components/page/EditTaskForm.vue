@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { ITask, IStaff } from "@/types/index";
+import type { ITask, IStaff, IStatuses } from "@/types/index";
 import { formatTimestamp } from "~/utils/formatTimestamp";
-import type { FormError } from "#ui/types";
 import { Timestamp } from "firebase/firestore";
 
 const props = defineProps<{
@@ -25,20 +24,8 @@ const state: ITask = reactive({
 });
 const selectedStaff = ref<IStaff[]>([]);
 const staffOptions: Ref<IStaff[]> = ref([]);
-
-const validate = (state: any): FormError[] => {
-  const errors = [];
-  if (!state.product) errors.push({ path: "product", message: "Required" });
-  if (!state.status) errors.push({ path: "status", message: "Required" });
-  if (!state.equipment) errors.push({ path: "equipment", message: "Required" });
-  if (!state.materials) errors.push({ path: "materials", message: "Required" });
-  if (!state.staff) errors.push({ path: "staff", message: "Required" });
-  if (!state.amount) errors.push({ path: "amount", message: "Required" });
-  if (!state.start_date)
-    errors.push({ path: "start_date", message: "Required" });
-  if (!state.end_date) errors.push({ path: "end_date", message: "Required" });
-  return errors;
-};
+const selectedStatus = ref<IStatuses["title"]>("");
+const statusOptions: Ref<IStatuses[]> = ref([]);
 
 onMounted(async () => {
   isLoading.value = true;
@@ -51,6 +38,18 @@ onMounted(async () => {
   }));
 
   staffOptions.value = staffList;
+
+  //@ts-ignore
+  const { result: status } = (await $fetch(
+    "/api/query?col=statuses",
+  )) as IStatuses[];
+
+  const statusList: IStatuses[] = status.map((statusItem: IStatuses) => ({
+    id: statusItem.id,
+    title: statusItem.title,
+  }));
+
+  statusOptions.value = statusList;
 
   //@ts-ignore
   const { result: currentTask } = (await $fetch(
@@ -71,6 +70,8 @@ onMounted(async () => {
       startDateFormatted: formatTimestamp(currentTask.start_date.seconds),
       endDateFormatted: formatTimestamp(currentTask.end_date.seconds),
     };
+
+    selectedStatus.value = task.value.status.title;
   }
 
   watch(
@@ -86,6 +87,8 @@ onMounted(async () => {
         state.amount = newValue.amount;
         state.start_date = newValue.start_date;
         state.end_date = newValue.end_date;
+        state.startDateFormatted = formatTimestamp(newValue.start_date.seconds);
+        state.endDateFormatted = formatTimestamp(newValue.end_date.seconds);
       }
     },
     { immediate: true },
@@ -120,19 +123,72 @@ watch(
       Редактирование задания
     </h2>
     <UForm
-      :validate="validate"
       :state="state"
       class="space-y-4 px-4"
       @submit="console.log('submitted')"
     >
-      <UFormGroup label="Партия">
-        <UInput
-          v-model="state.amount"
+      <div class="flex gap-2">
+        <UFormGroup label="Дата начала">
+          <UInput
+            v-model="state.startDateFormatted"
+            size="xl"
+            type="text"
+            color="primary"
+            variant="outline"
+            placeholder="Укажите дату начала"
+            required
+            disabled
+          />
+        </UFormGroup>
+
+        <UFormGroup label="Дата выпуска">
+          <UInput
+            v-model="state.endDateFormatted"
+            size="xl"
+            type="text"
+            color="primary"
+            variant="outline"
+            placeholder="Укажите дату завершения"
+            required
+            disabled
+          />
+        </UFormGroup>
+      </div>
+      <div class="flex gap-2">
+        <UFormGroup label="Партия">
+          <UInput
+            v-model="state.amount"
+            size="xl"
+            type="number"
+            color="primary"
+            variant="outline"
+            placeholder="Укажите количество"
+            required
+          />
+        </UFormGroup>
+
+        <UFormGroup label="Изделие">
+          <UInput
+            v-model="state.product.title"
+            size="xl"
+            type="text"
+            color="primary"
+            variant="outline"
+            placeholder="Укажите название изделия"
+            required
+            disabled
+          />
+        </UFormGroup>
+      </div>
+
+      <UFormGroup label="Текущий процесс">
+        <USelectMenu
+          v-model="selectedStatus"
+          :options="statusOptions"
           size="xl"
-          type="nember"
           color="primary"
           variant="outline"
-          placeholder="Укажите количество"
+          option-attribute="title"
           required
         />
       </UFormGroup>
@@ -151,8 +207,8 @@ watch(
           <template #label>
             <template v-if="selectedStaff.length">
               <span
-                >{{ selectedStaff.length }} сотрудник{{
-                  selectedStaff.length > 1 ? "а" : ""
+                >{{ selectedStaff.length }} выбран{{
+                  selectedStaff.length > 1 ? "о" : ""
                 }}</span
               >
             </template>

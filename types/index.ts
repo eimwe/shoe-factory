@@ -36,4 +36,4 @@ interface ITask {
   endDateFormatted: string;
 }
 
-export type { ITask, IStaff };
+export type { ITask, IStaff, IStatuses };
